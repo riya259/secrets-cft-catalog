@@ -14,6 +14,7 @@ spec:
          - StackName
          - SecretName
          - SecretValue
+         - action
       properties:
         StackName:
           type: string
@@ -76,11 +77,11 @@ spec:
 
     - id: deploy-cloudformation
       name: Deploy CloudFormation Stack
-      action: aws:cloudformation:deploy
+      action: aws:deploy-cloudformation
       input:
-        stackName: ${{ parameters.StackName }}
-        secretName: ${{ parameters.SecretName }}
-        secretValue: ${{ parameters.SecretValue }}
+        StackName: ${{ parameters.StackName }}
+        SecretName: ${{ parameters.SecretName }}
+        SecretValue: ${{ parameters.SecretValue }}
         action: ${{ parameters.action }}
         region: us-west-2  # Change to your desired AWS region
         templatePath: ../cft.json
@@ -94,9 +95,9 @@ spec:
         repoUrl: 'github.com?repo=secrets-cft-catalog&owner=riya259'
         branchOrTagName: 'master'
         workflowInputs:
-          stackname: ${{ parameters.StackName }}
-          secretName: ${{ parameters.SecretName }}
-          secretValue: ${{ parameters.SecretValue }}
+          Stackname: ${{ parameters.StackName }}
+          SecretName: ${{ parameters.SecretName }}
+          SecretValue: ${{ parameters.SecretValue }}
           action: ${{ parameters.action }}
 
 
