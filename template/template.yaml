@@ -62,8 +62,7 @@ spec:
         name: Publishing Details
         action: publish:github
         input:
-          allowedHosts:
-            - github.com
+          allowedHosts: ['github.com']
           description: This repo is to create a secret ${{ parameters.SecretName }} using backstage.
           repoUrl: ${{ parameters.repoUrl }}
           repoVisibility: public
@@ -86,7 +85,7 @@ spec:
         action: catalog:register
         input:
           repoContentsUrl: ${{steps['publish'].output.repoContentsUrl }}
-          catalogInfoPath: /catalog-info.yaml
+          catalogInfoPath: '/catalog-info.yaml'
 
   # Output links  are displayed to the user after the template execution.
     output:
