@@ -1,0 +1,13 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: secrets-creation
+  annotations:
+    github.com/project-slug: riya259/secrets-cft-catalog
+    backstage.io/techdocs-ref: value
+  title: 'Secrets Creation'
+  description: Cft to deploy Secrets.
+spec:
+  type: service
+  lifecycle: experimental
+  owner: user:guest

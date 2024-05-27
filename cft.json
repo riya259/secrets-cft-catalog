@@ -1,0 +1,26 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Resources": {
+    "MySecret": {
+      "Type": "AWS::SecretsManager::Secret",
+      "Properties": {
+        "Name": {
+          "Ref": "SecretName"
+        },
+        "SecretString": {
+          "Ref": "SecretValue"
+        }
+      }
+    }
+  },
+  "Parameters": {
+    "SecretName": {
+      "Type": "String",
+      "Description": "Name of the secret"
+    },
+    "SecretValue": {
+      "Type": "String",
+      "Description": "Value of the secret"
+    }
+  }
+}
