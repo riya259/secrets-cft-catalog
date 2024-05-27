@@ -9,113 +9,92 @@ spec:
   owner: guests
   type: service
   parameters:
-    - title: Secrets Creation
-      required:
-         - StackName
-         - SecretName
-         - SecretValue
-         - action
-      properties:
-        StackName:
-          type: string
-          title: Stack Name
-          description: Name of the CloudFormation stack
+      - title: Secrets Creation
+        required:
+           - StackName
+           - SecretName
+           - SecretValue
+           - action
+        properties:
+          StackName:
+            type: string
+            title: Stack Name
+            description: Name of the CloudFormation stack
+          SecretName:
+            title: Secret Name
+            type: string
+            description: Name of the Secret to be created.
+            ui:autofocus: true
+            ui:options:
+              rows: 5
+          SecretValue:
+            title: Secret to be stored.
+            type: string
+            description: Enter the secret value to store .
+          action:
+            title: action
+            type: string
+            description: What action do you want to perform? Create or delete?
+            enum:
+              - create
+              - delete
+      - title: Choose a Repository Location
+        required:
+          - repoUrl
+        properties:
+          repoUrl:
+            title: Location of the repository
+            type: string
+            ui:field: RepoUrlPicker
+            ui:options:
+              allowedHosts:
+                - github.com
 
-        SecretName:
-          title: Secret Name
-          type: string
-          description: Name of the Secret to be created.
-          ui:autofocus: true
-          ui:options:
-            rows: 5
+    steps:
+      - id: fetch-base
+        name: Fetching Details from content folder
+        action: fetch:template
+        input:
+          url: ./content
+          values:
+            name: ${{ parameters.SecretName}}
+      - id: publish
+        name: Publishing Details
+        action: publish:github
+        input:
+          allowedHosts:
+            - github.com
+          description: This repo is to create a secret ${{ parameters.SecretName }} using backstage.
+          repoUrl: ${{ parameters.repoUrl }}
+          repoVisibility: public
+      - id: github-action
+        name: Starting GitHub action
+        action: github:actions:dispatch
+        input:
+          workflowId: secrets.yaml
+          repoUrl: github.com?repo=secrets-cft-catalog&owner=riya259
+          branchOrTagName: master
+          workflowInputs:
+          workflowInputs:
+            Stackname: ${{ parameters.StackName }}
+            SecretName: ${{ parameters.SecretName }}
+            SecretValue: ${{ parameters.SecretValue }}
+            action: ${{ parameters.action }}
 
-        SecretValue:
-          title: Secret to be stored.
-          type: string
-          description: Enter the secret value to store .
+      - id: register
+        name: Registering the new Component
+        action: catalog:register
+        input:
+          repoContentsUrl: ${{steps['publish'].output.repoContentsUrl }}
+          catalogInfoPath: /catalog-info.yaml
 
-        action:
-          title: action
-          type: string
-          description: What action do you want to perform? Create or delete?
-          enum:
-            - create
-            - delete
-
-    - title: Choose a Repository Location
-      required:
-        - repoUrl
-      properties:
-        repoUrl:
-          title: Location of the repository
-          type: string
-          ui:field: RepoUrlPicker
-          ui:options:
-            allowedHosts:
-              - github.com
-
-  steps:
-# Getting the all the files/details from the template
-    - id: fetch-base
-      name: Fetching Details from content folder
-      action: fetch:template
-      input:
-        url: ./content  # Location of the content directory where catlog-info.yaml file is present for the template
-        values:
-          name: ${{ parameters.SecretName}}
-
-# Publish the content of the current working directory to our github directory
-    - id: publish
-      name: Publishing Details
-      action: publish:github
-      input:
-        allowedHosts: ['github.com']
-        description: This repo is to create a secret ${{ parameters.SecretName }} using backstage.
-        repoUrl: ${{ parameters.repoUrl }}
-        repoVisibility: public # or 'internal' or 'private'
-        # defaultBranch: master
-
-    - id: deploy-cloudformation
-      name: Deploy CloudFormation Stack
-      action: aws:deploy-cloudformation
-      input:
-        StackName: ${{ parameters.StackName }}
-        SecretName: ${{ parameters.SecretName }}
-        SecretValue: ${{ parameters.SecretValue }}
-        action: ${{ parameters.action }}
-        region: us-west-2  # Change to your desired AWS region
-        templatePath: ../cft.json
-
-# Triggering CI-CD to create resource in our case github action.
-    - id: github-action
-      name: Starting GitHub action
-      action: github:actions:dispatch
-      input:
-        workflowId:  secrets.yaml # ID of GitHub action WorkFlow
-        repoUrl: 'github.com?repo=secrets-cft-catalog&owner=riya259'
-        branchOrTagName: 'master'
-        workflowInputs:
-          Stackname: ${{ parameters.StackName }}
-          SecretName: ${{ parameters.SecretName }}
-          SecretValue: ${{ parameters.SecretValue }}
-          action: ${{ parameters.action }}
-
-
-# Registering new component in the catalog of backstage.
-    - id: register
-      name: Registering the new Component
-      action: catalog:register
-      input:
-        repoContentsUrl: ${{steps['publish'].output.repoContentsUrl }}
-        catalogInfoPath: 'content/catalog-info.yaml' # where the info of the catalog is stored.
-
-# Output links  are displayed to the user after the template execution.
-  output:
-    links:
-      - title: Repository
-        url: ${{ steps['publish'].output.remoteUrl }}
-      - title: Open in catalog
-        icon: catalog
-        entityRef: ${{ steps['register'].output.entityRef }}
-      - title: AWS CloudFormation Stack
-        url: https://console.aws.amazon.com/cloudformation/home
+  # Output links  are displayed to the user after the template execution.
+    output:
+      links:
+        - title: Repository
+          url: ${{ steps['publish'].output.remoteUrl }}
+        - title: Open in catalog
+          icon: catalog
+          entityRef: ${{ steps['register'].output.entityRef }}
+        - title: AWS CloudFormation Stack
+          url: https://console.aws.amazon.com/cloudformation/home
